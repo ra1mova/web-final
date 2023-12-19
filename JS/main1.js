@@ -16,7 +16,8 @@ let idToEdit = null;
 
 // Retrieve tasks from API
 function retrieveTasks() {
-  fetch(API_BASE_URL)
+  checkUser()
+    fetch(API_BASE_URL)
     .then(imgponse => {
       if (!imgponse.ok) {
         throw new Error(`HTTP error! Status: ${imgponse.status}`);
@@ -38,6 +39,7 @@ window.addEventListener("DOMContentLoaded", retrieveTasks);
 
 // Handle Add or Update task
 buttonAdd.addEventListener("click", () => {
+  checkUser()
   if (editMode) {
     submitTaskUpdate();
   } else {
@@ -46,6 +48,7 @@ buttonAdd.addEventListener("click", () => {
 });
 
 inputTask.addEventListener("keyup", (e) => {
+  checkUser()
   if (e.key === 'Enter' && inputTask.value.length > 0) {
     if (editMode) {
       submitTaskUpdate();
@@ -57,31 +60,40 @@ inputTask.addEventListener("keyup", (e) => {
 
 // Create new task via API
 function createNewTask() {
-  const taskDetails = {
-    task: inputTask.value,
-    dueDate: inputDate.value,
-    completed: false,
-    status: "In progress",
-  };
-
-  fetch(API_BASE_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(taskDetails),
-  })
-  .then(imgponse => imgponse.json())
-  .then(() => {
-    popupAlert("Task successfully added", "success");
-    imgetInputs();
-    retrieveTasks();
-  })
-  .catch(error => console.error('Error adding task:', error));
+  checkUser()
+  if (inputTask.value === "") {
+    alert('Task description cannot be empty.');
+    console.log(inputDate.value)
+  } else if (inputDate === null) {
+    alert('Due date cannot be empty.');
+  } else {
+    const taskDetails = {
+      task: inputTask.value,
+      dueDate: inputDate.value,
+      completed: false,
+      status: "In progress",
+    };
+  
+    fetch(API_BASE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(taskDetails),
+    })
+    .then(imgponse => imgponse.json())
+    .then(() => {
+      popupAlert("Task successfully added", "success");
+      imgetInputs();
+      retrieveTasks();
+    })
+    .catch(error => console.error('Error adding task:', error));
+  }
 }
 
 // Update task in API
 function submitTaskUpdate() {
+  checkUser()
   const updatedDetails = {
     task: inputTask.value,
     dueDate: inputDate.value,
@@ -105,6 +117,7 @@ function submitTaskUpdate() {
 
 // Enter edit mode
 function initiateEdit(id) {
+  checkUser()
   const taskToEdit = taskList.find((task) => task.id === id);
   inputTask.value = taskToEdit.task;
   inputDate.value = taskToEdit.dueDate;
@@ -116,6 +129,7 @@ function initiateEdit(id) {
 
 // imget form inputs
 function imgetInputs() {
+  checkUser()
   inputTask.value = "";
   inputDate.value = "";
   editMode = false;
@@ -125,6 +139,7 @@ function imgetInputs() {
 
 // Display alert message
 function popupAlert(message, type) {
+  checkUser()
   let alertBox = `
         <div class="alert alert-${type} shadow-lg mb-5 w-full">
             <div>
@@ -145,6 +160,7 @@ function popupAlert(message, type) {
 
 // Remove task using API
 function removeTask(id) {
+  checkUser()
   fetch(`${API_BASE_URL}/${id}`, {
     method: 'DELETE',
   })
@@ -157,6 +173,7 @@ function removeTask(id) {
 
 // Toggle task completion status
 function changeTaskStatus(id) {
+  checkUser()
   let taskToToggle = taskList.find((task) => task.id === id);
   const updatedTask = {
     ...taskToToggle,
@@ -180,6 +197,7 @@ function changeTaskStatus(id) {
 
 // Clear all tasks
 buttonDeleteAll.addEventListener("click", () => {
+  checkUser()
   fetch(API_BASE_URL)
     .then(imgponse => imgponse.json())
     .then(data => {
@@ -195,6 +213,7 @@ buttonDeleteAll.addEventListener("click", () => {
 
 // Filter tasks based on status
 function filterTodos(status) {
+  checkUser()
   let filteredTasks;
   switch (status) {
     case "all":
@@ -213,6 +232,7 @@ function filterTodos(status) {
 }
 
 function renderTasks(tasksArray) {
+  checkUser()
   listTodos.innerHTML = "";
   if (tasksArray.length === 0) {
     listTodos.innerHTML = `<tr><td colspan="5" class="text-center">No tasks available</td></tr>`;
@@ -240,3 +260,11 @@ function renderTasks(tasksArray) {
   });
 }
 
+function checkUser() {
+  const isAuthenticated = JSON.parse(localStorage.getItem("isAuthenticated")) || false;
+  if (isAuthenticated) {
+    return true
+  } else {
+    window.location.href = 'index.html';
+  }
+}

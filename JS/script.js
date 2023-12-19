@@ -27,3 +27,8 @@ function saveTheme(theme_name) {
 function getTheme() {
     return localStorage.getItem('theme');
 }
+
+function logout() {
+    localStorage.removeItem("isAuthenticated");
+    window.location.href = 'index.html';
+}
